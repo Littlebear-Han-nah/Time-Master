@@ -9,11 +9,11 @@ import Link from "next/link";
 interface Task {
   id: string;
   title: string;
-  duration: number; // in hours
+  duration: number;
   location?: string;
   deadline?: string;
   priority: "High" | "Medium" | "Low";
-  isVerified?: boolean; // Represents hyper-local/API synced data
+  isVerified?: boolean;
 }
 
 interface TimelineEvent {
@@ -38,8 +38,8 @@ interface TimeSlot {
 type TimelineItem = TimelineEvent | TimeSlot;
 
 // --- Constants & Helpers ---
-const DAY_START = 8.0; // 08:00 AM
-const DAY_END = 22.0;  // 10:00 PM
+const DAY_START = 8.0;
+const DAY_END = 22.0;
 
 const formatTime = (num: number) => {
   const hours = Math.floor(num);
@@ -49,7 +49,6 @@ const formatTime = (num: number) => {
   return `${displayHours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')} ${period}`;
 };
 
-// HYPER-LOCAL MOCK DATA (XJTLU)
 const initialTasks: Task[] = [
   { id: "t1", title: "Review EAP115 Vocabulary", duration: 1.5, priority: "Medium", location: "Learning Mall Core", isVerified: true },
   { id: "t2", title: "Tech Club Meeting", duration: 1.0, priority: "Low", location: "SA Building" },
@@ -63,15 +62,12 @@ const initialEvents: TimelineEvent[] = [
 ];
 
 const AI_SUGGESTIONS = [
-  // Academic / Focus
   { title: "Review notes at Learning Mall Core (Low 🟢)", duration: 1.0, category: "Academic", isVerified: true },
   { title: "Practice presentation in empty CB G11", duration: 0.5, category: "Academic", isVerified: true },
   { title: "Drop by Professor's office hour (FB Building)", duration: 1.0, category: "Academic", isVerified: true },
-  // Wellness / Destress
   { title: "Grab coffee at SIP Campus Canteen", duration: 0.5, category: "Wellness", isVerified: true },
   { title: "30-min Jog around XJTLU South Campus", duration: 0.5, category: "Wellness", isVerified: true },
   { title: "Quick rest at Student Activity Centre", duration: 0.5, category: "Wellness", isVerified: true },
-  // Social / Extracurricular
   { title: "Upcoming XJTLU Tech Club Seminar (SA)", duration: 1.0, category: "Social", isVerified: true },
   { title: "Check E-Bridge for society updates", duration: 0.5, category: "Social", isVerified: true },
 ];
@@ -80,27 +76,21 @@ export default function InteractivePlanning() {
   const [unplannedTasks, setUnplannedTasks] = useState<Task[]>(initialTasks);
   const [timelineEvents, setTimelineEvents] = useState<TimelineEvent[]>(initialEvents);
   const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
-
-  // Sync / Import State
   const [isSyncing, setIsSyncing] = useState(false);
-
-  // AI Explore State
   const [exploreSlotId, setExploreSlotId] = useState<string>("");
   const [isSimulating, setIsSimulating] = useState(false);
-
-  // Form State
   const [title, setTitle] = useState("");
   const [duration, setDuration] = useState("1");
   const [location, setLocation] = useState("");
   const [deadline, setDeadline] = useState("");
-
-  // Modal State
   const [taskForCompletion, setTaskForCompletion] = useState<TimelineEvent | null>(null);
   const [actualDuration, setActualDuration] = useState("");
   const [isCompleting, setIsCompleting] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
+  
+  // 手机上的标签页状态
+  const [mobileTab, setMobileTab] = useState<"tasks" | "timeline">("tasks");
 
-  // --- Derived State: Gap Calculation ---
   const displayTimeline = useMemo(() => {
     const sorted = [...timelineEvents].sort((a, b) => a.startTime - b.startTime);
     const display: TimelineItem[] = [];
@@ -135,7 +125,6 @@ export default function InteractivePlanning() {
 
   const emptySlots = displayTimeline.filter((item) => item.type === "empty") as TimeSlot[];
 
-  // --- Handlers ---
   const handleAddTask = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return;
@@ -267,9 +256,9 @@ export default function InteractivePlanning() {
   };
 
   return (
-    <div className="min-h-screen p-6 md:p-8 max-w-7xl mx-auto w-full flex flex-col font-sans relative">
+    <div className="min-h-screen p-4 md:p-8 max-w-7xl mx-auto w-full flex flex-col font-sans relative">
       
-      {/* Completion Modal Overlay */}
+      {/* Completion Modal */}
       <AnimatePresence>
         {taskForCompletion && (
           <motion.div 
@@ -282,7 +271,7 @@ export default function InteractivePlanning() {
               initial={{ scale: 0.9, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.9, y: 20 }}
-              className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl relative overflow-hidden border border-orange-100"
+              className="bg-white rounded-3xl p-6 md:p-8 max-w-sm w-full shadow-2xl relative overflow-hidden border border-orange-100"
             >
               {!showConfetti && (
                 <button 
@@ -345,32 +334,32 @@ export default function InteractivePlanning() {
         )}
       </AnimatePresence>
 
-      {/* Header & AI Explore */}
-      <header className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 gap-6">
-        <div className="flex items-center gap-4">
-          <Link href="/" className="p-2 bg-white/50 hover:bg-white rounded-full transition-colors shadow-sm text-orange-600">
+      {/* Header */}
+      <header className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 md:mb-8 gap-4 md:gap-6">
+        <div className="flex items-center gap-4 w-full lg:w-auto">
+          <Link href="/" className="p-2 bg-white/50 hover:bg-white rounded-full transition-colors shadow-sm text-orange-600 shrink-0">
             <ArrowLeft className="w-5 h-5" />
           </Link>
-          <div>
-            <h1 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-orange-600 to-rose-500 tracking-tight">
+          <div className="min-w-0">
+            <h1 className="text-2xl md:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-orange-600 to-rose-500 tracking-tight">
               Interactive Planning
             </h1>
-            <p className="text-orange-900/60 font-medium text-sm mt-1">Real-time scheduling with time-blocking algorithms.</p>
+            <p className="text-orange-900/60 font-medium text-xs md:text-sm mt-1">Real-time scheduling with time-blocking algorithms.</p>
           </div>
         </div>
 
-        {/* AI Explore Time Module */}
-        <div className="glass-card px-6 py-4 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center gap-4 border border-orange-200/50 shadow-orange-100/50 shadow-lg">
-          <div className="flex flex-col">
+        {/* AI Explore Module */}
+        <div className="glass-card px-4 md:px-6 py-3 md:py-4 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center gap-3 border border-orange-200/50 shadow-orange-100/50 shadow-lg w-full lg:w-auto">
+          <div className="flex flex-col flex-1 sm:flex-none">
             <span className="text-xs font-bold text-rose-500 uppercase tracking-wider mb-1 flex items-center gap-1">
-              <BrainCircuit className="w-3 h-3" /> Explore Free Time
+              <BrainCircuit className="w-3 h-3" /> Explore
             </span>
             <select 
               value={exploreSlotId} 
               onChange={(e) => setExploreSlotId(e.target.value)}
-              className="bg-transparent text-sm font-semibold text-orange-950 outline-none cursor-pointer max-w-[200px]"
+              className="bg-transparent text-xs md:text-sm font-semibold text-orange-950 outline-none cursor-pointer max-w-full"
             >
-              <option value="" disabled>Select an empty gap...</option>
+              <option value="" disabled>Select gap...</option>
               {emptySlots.map(slot => (
                 <option key={slot.id} value={slot.id}>
                   {formatTime(slot.startTime)} - {formatTime(slot.endTime)} ({slot.duration}h)
@@ -381,20 +370,21 @@ export default function InteractivePlanning() {
           <button 
             onClick={handleAIExplore}
             disabled={isSimulating || !exploreSlotId}
-            className="relative overflow-hidden group bg-gradient-to-r from-orange-500 to-rose-500 hover:from-orange-600 hover:to-rose-600 text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-md transition-all flex items-center gap-2 disabled:opacity-50 w-full sm:w-auto justify-center"
+            className="relative overflow-hidden group bg-gradient-to-r from-orange-500 to-rose-500 hover:from-orange-600 hover:to-rose-600 text-white px-4 md:px-5 py-2 md:py-2.5 rounded-xl font-bold text-xs md:text-sm shadow-md transition-all flex items-center gap-2 disabled:opacity-50 w-full sm:w-auto justify-center"
           >
             <span className="absolute inset-0 w-full h-full bg-white/20 group-hover:translate-x-full transition-transform duration-500 ease-out -skew-x-12 -translate-x-full"></span>
             <Sparkles className={`w-4 h-4 ${isSimulating ? "animate-spin" : ""}`} />
-            {isSimulating ? "Exploring..." : "AI Suggestion"}
+            <span className="hidden sm:inline">{isSimulating ? "Exploring..." : "AI"}</span>
+            <span className="sm:hidden">{isSimulating ? "..." : "AI"}</span>
           </button>
         </div>
       </header>
 
-      {/* Main Two-Column Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 flex-1 items-start">
+      {/* Desktop Layout (lg及以上) */}
+      <div className="hidden lg:grid grid-cols-12 gap-8 flex-1 items-start">
         
         {/* Left Column: Task Form & Pool */}
-        <div className="lg:col-span-4 flex flex-col gap-6 sticky top-8">
+        <div className="col-span-4 flex flex-col gap-6 sticky top-8">
           
           {/* Add Task Form */}
           <div className="glass-card rounded-3xl p-6 border border-orange-100 shadow-sm">
@@ -460,7 +450,6 @@ export default function InteractivePlanning() {
               </h2>
             </div>
             
-            {/* Sync Syllabus Button */}
             <button 
               onClick={handleSyncSyllabus}
               disabled={isSyncing}
@@ -522,9 +511,9 @@ export default function InteractivePlanning() {
           </div>
         </div>
 
-        {/* Right Column: Dynamic Timeline */}
-        <div className="lg:col-span-8">
-          <div className="glass-card rounded-3xl p-6 md:p-8 border border-orange-100 shadow-sm">
+        {/* Right Column: Timeline */}
+        <div className="col-span-8">
+          <div className="glass-card rounded-3xl p-8 border border-orange-100 shadow-sm">
             <h2 className="text-xl font-bold text-orange-950 mb-8 flex items-center gap-2">
               <div className="p-2 bg-rose-100 rounded-lg text-rose-600"><Clock className="w-5 h-5"/></div>
               Smart Timeline
@@ -540,15 +529,12 @@ export default function InteractivePlanning() {
                     animate={{ opacity: 1, y: 0 }}
                     className="relative pb-4"
                   >
-                    {/* Time Label */}
                     <div className="absolute -left-[90px] top-4 text-xs font-bold text-orange-600/80 text-right w-16 uppercase tracking-wider">
                       {formatTime(item.startTime)}
                     </div>
 
-                    {/* Timeline Dot */}
                     <div className="absolute -left-[31px] top-5 w-3 h-3 rounded-full bg-orange-300 border-2 border-white shadow-sm z-10" />
                     
-                    {/* Event Blocks */}
                     {item.type === "fixed" && (
                       <div className="p-4 rounded-2xl bg-slate-100/50 border border-slate-200/60 flex items-center gap-3 text-slate-500 opacity-80">
                         <div className="w-1.5 h-8 bg-slate-400 rounded-full"></div>
@@ -571,7 +557,7 @@ export default function InteractivePlanning() {
                         className={`p-4 rounded-2xl border-2 border-dashed transition-all flex items-center justify-center min-h-[60px] cursor-crosshair ${
                           draggedTaskId ? "border-orange-400 bg-orange-50/80 shadow-inner" : "border-orange-200 bg-white/20 hover:bg-orange-50"
                         }`}
-                        style={{ height: Math.max(60, item.duration * 40) }} // visual height scaling
+                        style={{ height: Math.max(60, item.duration * 40) }}
                       >
                         <span className="text-sm font-semibold text-orange-400 flex items-center gap-2">
                           {item.duration} hrs free • Drop task here
@@ -650,6 +636,271 @@ export default function InteractivePlanning() {
             </div>
           </div>
         </div>
+
+      </div>
+
+      {/* Mobile Layout (lg以下) */}
+      <div className="lg:hidden flex flex-col gap-4">
+        
+        {/* Tab Switcher */}
+        <div className="flex gap-2 sticky top-14 z-30 bg-orange-50/80 backdrop-blur p-2 rounded-xl">
+          <button
+            onClick={() => setMobileTab("tasks")}
+            className={`flex-1 py-2 px-3 rounded-lg font-bold text-sm transition-all ${
+              mobileTab === "tasks"
+                ? "bg-orange-500 text-white shadow-sm"
+                : "bg-white/60 text-orange-950 border border-orange-200"
+            }`}
+          >
+            Tasks
+          </button>
+          <button
+            onClick={() => setMobileTab("timeline")}
+            className={`flex-1 py-2 px-3 rounded-lg font-bold text-sm transition-all ${
+              mobileTab === "timeline"
+                ? "bg-orange-500 text-white shadow-sm"
+                : "bg-white/60 text-orange-950 border border-orange-200"
+            }`}
+          >
+            Timeline
+          </button>
+        </div>
+
+        {/* Tasks Tab */}
+        {mobileTab === "tasks" && (
+          <div className="flex flex-col gap-4 pb-4">
+            
+            {/* Add Task Form */}
+            <div className="glass-card rounded-3xl p-4 border border-orange-100 shadow-sm">
+              <h2 className="text-base font-bold text-orange-950 mb-3 flex items-center gap-2">
+                <div className="p-1.5 bg-orange-100 rounded-lg text-orange-600"><Plus className="w-4 h-4"/></div>
+                Add Task
+              </h2>
+              <form onSubmit={handleAddTask} className="flex flex-col gap-2">
+                <input
+                  type="text"
+                  placeholder="Task Name"
+                  required
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  className="bg-white/60 border border-orange-200 focus:border-orange-400 focus:ring-2 focus:ring-orange-200 rounded-lg px-3 py-2 text-sm outline-none transition-all placeholder-orange-300 text-orange-900"
+                />
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <Clock className="w-3.5 h-3.5 text-orange-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="number"
+                      step="0.5"
+                      min="0.5"
+                      required
+                      placeholder="Hrs"
+                      value={duration}
+                      onChange={(e) => setDuration(e.target.value)}
+                      className="w-full bg-white/60 border border-orange-200 focus:border-orange-400 focus:ring-2 focus:ring-orange-200 rounded-lg pl-8 pr-2 py-2 text-sm outline-none transition-all placeholder-orange-300 text-orange-900"
+                    />
+                  </div>
+                  <div className="relative flex-1">
+                    <MapPin className="w-3.5 h-3.5 text-orange-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      placeholder="Loc"
+                      value={location}
+                      onChange={(e) => setLocation(e.target.value)}
+                      className="w-full bg-white/60 border border-orange-200 focus:border-orange-400 focus:ring-2 focus:ring-orange-200 rounded-lg pl-8 pr-2 py-2 text-sm outline-none transition-all placeholder-orange-300 text-orange-900"
+                    />
+                  </div>
+                </div>
+                <input
+                  type="date"
+                  value={deadline}
+                  onChange={(e) => setDeadline(e.target.value)}
+                  className="bg-white/60 border border-orange-200 focus:border-orange-400 focus:ring-2 focus:ring-orange-200 rounded-lg px-3 py-2 text-sm outline-none transition-all text-orange-900 cursor-pointer"
+                />
+                <button
+                  type="submit"
+                  className="mt-2 bg-orange-500 hover:bg-orange-600 text-white py-2 rounded-lg font-bold text-sm shadow-md transition-colors"
+                >
+                  Add
+                </button>
+              </form>
+            </div>
+
+            {/* Task Pool */}
+            <div className="glass-card rounded-3xl p-4 border border-orange-100 shadow-sm flex flex-col max-h-[50vh]">
+              <h2 className="text-base font-bold text-orange-950 mb-3 flex items-center gap-2">
+                <div className="p-1.5 bg-orange-100 rounded-lg text-orange-600"><CalendarDays className="w-4 h-4"/></div>
+                Pool
+              </h2>
+              
+              <button 
+                onClick={handleSyncSyllabus}
+                disabled={isSyncing}
+                className="mb-3 w-full bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 py-2 rounded-lg font-bold text-xs shadow-sm transition-all flex items-center justify-center gap-2 disabled:opacity-70"
+              >
+                {isSyncing ? (
+                  <>
+                    <div className="w-3 h-3 border-2 border-indigo-400/30 border-t-indigo-600 rounded-full animate-spin" />
+                    Syncing...
+                  </>
+                ) : (
+                  <>
+                    <DownloadCloud className="w-3 h-3" />
+                    Sync
+                  </>
+                )}
+              </button>
+
+              <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-2">
+                <AnimatePresence>
+                  {unplannedTasks.map((task) => (
+                    <motion.div
+                      layout
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.9 }}
+                      key={task.id}
+                      draggable
+                      onDragStart={(e: any) => handleDragStart(e, task.id)}
+                      onDragEnd={handleDragEnd}
+                      className={`group relative flex items-center gap-2 p-3 rounded-xl border bg-white/80 cursor-grab active:cursor-grabbing shadow-sm hover:shadow-md transition-all ${
+                        task.isVerified ? "border-indigo-200" : "border-orange-200"
+                      }`}
+                    >
+                      <GripVertical className="w-4 h-4 opacity-40 group-hover:opacity-100 transition-opacity text-orange-500 shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-1">
+                          <h3 className="font-bold text-xs text-slate-800 truncate">{task.title}</h3>
+                          {task.isVerified && (
+                            <span className="flex items-center gap-0.5 text-[8px] font-bold uppercase tracking-wider text-indigo-600 bg-indigo-100 px-1 py-0.5 rounded shrink-0">
+                              API
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-[10px] font-semibold text-slate-500 mt-0.5">{task.duration}h</p>
+                      </div>
+                    </motion.div>
+                  ))}
+                  {unplannedTasks.length === 0 && (
+                    <div className="text-center py-6 text-orange-300">
+                      <p className="text-xs font-medium">Empty</p>
+                    </div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Timeline Tab */}
+        {mobileTab === "timeline" && (
+          <div className="glass-card rounded-3xl p-4 border border-orange-100 shadow-sm pb-20">
+            <h2 className="text-base font-bold text-orange-950 mb-4 flex items-center gap-2">
+              <div className="p-1.5 bg-rose-100 rounded-lg text-rose-600"><Clock className="w-4 h-4"/></div>
+              Timeline
+            </h2>
+            
+            <div className="relative border-l-[3px] border-orange-200/50 ml-12 pl-4 space-y-2">
+              <AnimatePresence>
+                {displayTimeline.map((item) => (
+                  <motion.div 
+                    key={item.id} 
+                    layout 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="relative pb-3"
+                  >
+                    <div className="absolute -left-[72px] top-3 text-[10px] font-bold text-orange-600/80 text-right w-14 uppercase tracking-wider">
+                      {formatTime(item.startTime)}
+                    </div>
+
+                    <div className="absolute -left-[23px] top-4 w-2.5 h-2.5 rounded-full bg-orange-300 border-2 border-white shadow-sm z-10" />
+                    
+                    {item.type === "fixed" && (
+                      <div className="p-3 rounded-xl bg-slate-100/50 border border-slate-200/60 flex items-center gap-2 text-slate-500 opacity-80">
+                        <div className="w-1 h-6 bg-slate-400 rounded-full shrink-0"></div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-bold text-xs text-slate-700 truncate">{item.title}</h4>
+                          <p className="text-[10px] font-semibold mt-0.5">{item.duration}h</p>
+                        </div>
+                      </div>
+                    )}
+
+                    {item.type === "empty" && (
+                      <div 
+                        onDragOver={(e) => e.preventDefault()}
+                        onDrop={(e) => handleDrop(e, item.startTime, item.duration)}
+                        className={`p-3 rounded-xl border-2 border-dashed transition-all flex items-center justify-center min-h-[50px] cursor-crosshair ${
+                          draggedTaskId ? "border-orange-400 bg-orange-50/80 shadow-inner" : "border-orange-200 bg-white/20 hover:bg-orange-50"
+                        }`}
+                        style={{ height: Math.max(50, item.duration * 30) }}
+                      >
+                        <span className="text-xs font-semibold text-orange-400 text-center">
+                          {item.duration}h free
+                        </span>
+                      </div>
+                    )}
+
+                    {item.type === "task" && (
+                      <div className={`p-3 rounded-xl border flex items-center gap-2 transition-colors ${
+                        item.isCompleted 
+                          ? "bg-emerald-50 border-emerald-200 opacity-80" 
+                          : "border-orange-300 bg-orange-50 shadow-sm"
+                      }`}>
+                        <div className={`w-1 h-6 rounded-full shrink-0 ${item.isCompleted ? "bg-emerald-400" : "bg-orange-500"}`}></div>
+                        
+                        <button 
+                          onClick={() => !item.isCompleted && openCompletionModal(item)}
+                          disabled={item.isCompleted}
+                          className={`shrink-0 transition-colors ${item.isCompleted ? "text-emerald-500" : "text-orange-300 hover:text-orange-500 cursor-pointer"}`}
+                        >
+                          {item.isCompleted ? <CheckCircle2 className="w-4 h-4" /> : <Circle className="w-4 h-4" />}
+                        </button>
+
+                        <div className="flex-1 min-w-0">
+                          <h4 className={`font-bold text-xs ${item.isCompleted ? "text-emerald-900 line-through" : "text-orange-950"}`}>
+                            {item.title}
+                          </h4>
+                          <p className={`text-[10px] font-semibold mt-0.5 ${item.isCompleted ? "text-emerald-700" : "text-orange-700"}`}>
+                            {item.duration}h
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {item.type === "ai_suggested" && (
+                      <div className={`p-3 rounded-xl border-0 flex items-center gap-2 transition-colors ${
+                        item.isCompleted
+                          ? "bg-emerald-100 border border-emerald-200 text-emerald-800"
+                          : "bg-gradient-to-r from-rose-500 to-orange-500 shadow-md shadow-rose-200 text-white"
+                      }`}>
+                        <div className={`w-1 h-6 rounded-full shrink-0 ${item.isCompleted ? "bg-emerald-400" : "bg-white/50"}`}></div>
+                        
+                        <button 
+                          onClick={() => !item.isCompleted && openCompletionModal(item)}
+                          disabled={item.isCompleted}
+                          className={`shrink-0 transition-colors ${item.isCompleted ? "text-emerald-600" : "text-white/60 hover:text-white cursor-pointer"}`}
+                        >
+                          {item.isCompleted ? <CheckCircle2 className="w-4 h-4" /> : <Circle className="w-4 h-4" />}
+                        </button>
+
+                        <div className="flex-1 min-w-0">
+                          <h4 className={`font-bold text-xs flex items-center gap-1 ${item.isCompleted ? "line-through" : ""}`}>
+                            {!item.isCompleted && <Sparkles className="w-3 h-3 text-rose-200 shrink-0" />} 
+                            {item.title}
+                          </h4>
+                          <p className={`text-[10px] font-semibold mt-0.5 ${item.isCompleted ? "text-emerald-600" : "text-rose-100"}`}>
+                            {item.duration}h • AI
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </div>
+          </div>
+        )}
 
       </div>
     </div>
