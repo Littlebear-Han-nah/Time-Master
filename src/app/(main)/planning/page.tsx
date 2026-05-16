@@ -162,8 +162,7 @@ export default function InteractivePlanning() {
     e.currentTarget.classList.add("opacity-50");
   };
 
-  const handleDragEnd = (e: React.DragEvent) => {
-    e.currentTarget.classList.remove("opacity-50");
+  const handleDragEnd = () => {
     setDraggedTaskId(null);
   };
 
