@@ -1,0 +1,61 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-mint: #f97316;
+  /* orange-500 */
+  --color-brand-mint-light: #ffedd5;
+  /* orange-100 */
+  --color-brand-mint-dark: #ea580c;
+  /* orange-600 */
+  --color-brand-sky: #f43f5e;
+  /* rose-500 */
+  --color-brand-sky-light: #ffe4e6;
+  /* rose-100 */
+  --color-brand-accent: #fcd34d;
+  /* amber-300 */
+  --color-brand-coral: #fb7185;
+  --color-bg-light: #fff7ed;
+  /* orange-50 */
+  --color-surface: rgba(255, 255, 255, 0.75);
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+
+  --shadow-soft: 0 10px 40px -10px rgba(249, 115, 22, 0.15);
+  /* orange shadow */
+  --shadow-glass: 0 8px 32px 0 rgba(249, 115, 22, 0.08);
+}
+
+:root {
+  --background: #fff7ed;
+  --foreground: #431407;
+  /* warm dark brown */
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #1a0f0a;
+    --foreground: #fff7ed;
+    --color-surface: rgba(40, 20, 10, 0.7);
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+.glass-card {
+  background: var(--color-surface);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: var(--shadow-glass);
+}
+
+@media (prefers-color-scheme: dark) {
+  .glass-card {
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+}
