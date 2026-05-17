@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Clock, MapPin, CalendarDays, ArrowLeft, GripVertical, Sparkles, BrainCircuit, CheckCircle2, Circle, X, PartyPopper, ShieldCheck, DownloadCloud, ChevronUp } from "lucide-react";
 import Link from "next/link";
@@ -75,7 +75,6 @@ const AI_SUGGESTIONS = [
 export default function InteractivePlanning() {
   const [unplannedTasks, setUnplannedTasks] = useState<Task[]>(initialTasks);
   const [timelineEvents, setTimelineEvents] = useState<TimelineEvent[]>(initialEvents);
-  const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
   const [exploreSlotId, setExploreSlotId] = useState<string>("");
   const [isSimulating, setIsSimulating] = useState(false);
@@ -88,6 +87,10 @@ export default function InteractivePlanning() {
   const [isCompleting, setIsCompleting] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [poolOpen, setPoolOpen] = useState(false);
+  
+  // 全局拖拽状态
+  const draggedTaskIdRef = useRef<string | null>(null);
+  const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
 
   const displayTimeline = useMemo(() => {
     const sorted = [...timelineEvents].sort((a, b) => a.startTime - b.startTime);
@@ -144,22 +147,24 @@ export default function InteractivePlanning() {
   };
 
   const handleDragStart = (e: React.DragEvent, taskId: string) => {
+    draggedTaskIdRef.current = taskId;
     setDraggedTaskId(taskId);
-    e.dataTransfer.setData("taskId", taskId);
     e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("taskId", taskId);
     e.currentTarget.classList.add("opacity-50");
-    // 拖拽时自动关闭 Bottom Sheet，让 Timeline 完全暴露
-    setPoolOpen(false);
   };
 
   const handleDragEnd = () => {
+    draggedTaskIdRef.current = null;
     setDraggedTaskId(null);
   };
 
   const handleDrop = (e: React.DragEvent, slotStart: number, slotDuration: number) => {
     e.preventDefault();
     e.stopPropagation();
-    const taskId = e.dataTransfer.getData("taskId");
+    
+    // 从 ref 或 dataTransfer 中获取 taskId
+    const taskId = draggedTaskIdRef.current || e.dataTransfer.getData("taskId");
     if (!taskId) return;
 
     const taskToMove = unplannedTasks.find((t) => t.id === taskId);
@@ -167,10 +172,15 @@ export default function InteractivePlanning() {
 
     if (taskToMove.duration > slotDuration) {
       alert(`Cannot fit a ${taskToMove.duration}h task into a ${slotDuration}h slot.`);
+      draggedTaskIdRef.current = null;
+      setDraggedTaskId(null);
       return;
     }
 
+    // 从任务池中移除
     setUnplannedTasks((prev) => prev.filter((t) => t.id !== taskId));
+    
+    // 添加到时间轴
     setTimelineEvents((prev) => [
       ...prev,
       {
@@ -183,6 +193,8 @@ export default function InteractivePlanning() {
         isVerified: taskToMove.isVerified
       },
     ]);
+
+    draggedTaskIdRef.current = null;
     setDraggedTaskId(null);
   };
 
@@ -263,7 +275,7 @@ export default function InteractivePlanning() {
     }, 1500);
   };
 
-  // 渲染 Timeline 项目的函数
+  // 渲染 Timeline 项目
   const renderTimelineItem = (item: TimelineItem, isMobile: boolean) => {
     const spacing = isMobile ? 30 : 40;
     
@@ -678,13 +690,11 @@ export default function InteractivePlanning() {
 
       </div>
 
-      {/* Mobile Layout (lg以下) */}
+      {/* Mobile Layout */}
       <div className="lg:hidden flex flex-col min-h-screen relative">
         
-        {/* Timeline - 主要区域，可滚动 */}
-        <div className={`flex-1 overflow-y-auto transition-opacity duration-200 ${
-          draggedTaskId ? "pointer-events-none opacity-50" : ""
-        }`}>
+        {/* Timeline */}
+        <div className="flex-1 overflow-y-auto">
           <div className="glass-card rounded-3xl p-4 border border-orange-100 shadow-sm mb-20">
             <h2 className="text-base font-bold text-orange-950 mb-4 flex items-center gap-2">
               <div className="p-1.5 bg-rose-100 rounded-lg text-rose-600"><Clock className="w-4 h-4"/></div>
@@ -699,7 +709,7 @@ export default function InteractivePlanning() {
           </div>
         </div>
 
-        {/* Bottom Sheet - Task Pool */}
+        {/* Bottom Sheet */}
         <AnimatePresence>
           {poolOpen && (
             <motion.div
@@ -719,12 +729,10 @@ export default function InteractivePlanning() {
           transition={{ type: "spring", damping: 25, stiffness: 120 }}
           className="fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-3xl border-t border-orange-200/50 shadow-2xl max-h-[80vh] flex flex-col"
         >
-          {/* Handle Bar */}
           <div className="flex justify-center pt-3 pb-2">
             <div className="w-10 h-1 bg-orange-300 rounded-full"></div>
           </div>
 
-          {/* Header */}
           <div className="px-4 py-2 border-b border-orange-100 flex items-center justify-between">
             <h2 className="text-base font-bold text-orange-950 flex items-center gap-2">
               <CalendarDays className="w-4 h-4 text-orange-600"/>
@@ -738,7 +746,6 @@ export default function InteractivePlanning() {
             </button>
           </div>
 
-          {/* Content */}
           <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2">
             {/* Add Task Form */}
             <div className="glass-card rounded-2xl p-3 border border-orange-100 mb-3">
@@ -853,7 +860,7 @@ export default function InteractivePlanning() {
           </div>
         </motion.div>
 
-        {/* Floating Button 打开 Task Pool */}
+        {/* Floating Button */}
         {!poolOpen && (
           <motion.button
             initial={{ scale: 0 }}
