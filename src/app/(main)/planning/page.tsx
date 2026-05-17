@@ -417,6 +417,7 @@ export default function InteractivePlanning() {
         <motion.div
           animate={{ y: poolOpen && !touchDragging ? 0 : "100%" }}
           transition={{ type: "spring", damping: 28, stiffness: 130 }}
+          style={{ pointerEvents: touchDragging ? "none" : "auto", visibility: touchDragging ? "hidden" : "visible" }}
           className="fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-3xl border-t border-orange-200/50 shadow-2xl max-h-[82vh] flex flex-col"
         >
           <div className="flex justify-center pt-3 pb-1"><div className="w-10 h-1 bg-orange-200 rounded-full" /></div>
