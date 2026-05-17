@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Clock, MapPin, CalendarDays, ArrowLeft, GripVertical, Sparkles, BrainCircuit, CheckCircle2, Circle, X, PartyPopper, ShieldCheck, DownloadCloud } from "lucide-react";
+import { Plus, Clock, MapPin, CalendarDays, ArrowLeft, GripVertical, Sparkles, BrainCircuit, CheckCircle2, Circle, X, PartyPopper, ShieldCheck, DownloadCloud, ChevronUp } from "lucide-react";
 import Link from "next/link";
 
 // --- Types ---
@@ -87,9 +87,7 @@ export default function InteractivePlanning() {
   const [actualDuration, setActualDuration] = useState("");
   const [isCompleting, setIsCompleting] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
-  
-  // 手机上的标签页状态
-  const [mobileTab, setMobileTab] = useState<"tasks" | "timeline">("tasks");
+  const [poolOpen, setPoolOpen] = useState(false);
 
   const displayTimeline = useMemo(() => {
     const sorted = [...timelineEvents].sort((a, b) => a.startTime - b.startTime);
@@ -181,6 +179,7 @@ export default function InteractivePlanning() {
         isVerified: taskToMove.isVerified
       },
     ]);
+    setPoolOpen(false);
   };
 
   const handleAIExplore = () => {
@@ -639,162 +638,13 @@ export default function InteractivePlanning() {
 
       </div>
 
-      {/* Mobile Layout (lg以下) */}
-      <div className="lg:hidden flex flex-col gap-4">
+      {/* Mobile Layout (lg以下) - Timeline 占满屏幕 + 底部 Task Pool 抽屉 */}
+      <div className="lg:hidden flex flex-col h-[calc(100vh-14rem)] relative">
         
-        {/* Tab Switcher */}
-        <div className="flex gap-2 sticky top-14 z-30 bg-orange-50/80 backdrop-blur p-2 rounded-xl">
-          <button
-            onClick={() => setMobileTab("tasks")}
-            className={`flex-1 py-2 px-3 rounded-lg font-bold text-sm transition-all ${
-              mobileTab === "tasks"
-                ? "bg-orange-500 text-white shadow-sm"
-                : "bg-white/60 text-orange-950 border border-orange-200"
-            }`}
-          >
-            Tasks
-          </button>
-          <button
-            onClick={() => setMobileTab("timeline")}
-            className={`flex-1 py-2 px-3 rounded-lg font-bold text-sm transition-all ${
-              mobileTab === "timeline"
-                ? "bg-orange-500 text-white shadow-sm"
-                : "bg-white/60 text-orange-950 border border-orange-200"
-            }`}
-          >
-            Timeline
-          </button>
-        </div>
-
-        {/* Tasks Tab */}
-        {mobileTab === "tasks" && (
-          <div className="flex flex-col gap-4 pb-4">
-            
-            {/* Add Task Form */}
-            <div className="glass-card rounded-3xl p-4 border border-orange-100 shadow-sm">
-              <h2 className="text-base font-bold text-orange-950 mb-3 flex items-center gap-2">
-                <div className="p-1.5 bg-orange-100 rounded-lg text-orange-600"><Plus className="w-4 h-4"/></div>
-                Add Task
-              </h2>
-              <form onSubmit={handleAddTask} className="flex flex-col gap-2">
-                <input
-                  type="text"
-                  placeholder="Task Name"
-                  required
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  className="bg-white/60 border border-orange-200 focus:border-orange-400 focus:ring-2 focus:ring-orange-200 rounded-lg px-3 py-2 text-sm outline-none transition-all placeholder-orange-300 text-orange-900"
-                />
-                <div className="flex gap-2">
-                  <div className="relative flex-1">
-                    <Clock className="w-3.5 h-3.5 text-orange-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
-                    <input
-                      type="number"
-                      step="0.5"
-                      min="0.5"
-                      required
-                      placeholder="Hrs"
-                      value={duration}
-                      onChange={(e) => setDuration(e.target.value)}
-                      className="w-full bg-white/60 border border-orange-200 focus:border-orange-400 focus:ring-2 focus:ring-orange-200 rounded-lg pl-8 pr-2 py-2 text-sm outline-none transition-all placeholder-orange-300 text-orange-900"
-                    />
-                  </div>
-                  <div className="relative flex-1">
-                    <MapPin className="w-3.5 h-3.5 text-orange-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
-                    <input
-                      type="text"
-                      placeholder="Loc"
-                      value={location}
-                      onChange={(e) => setLocation(e.target.value)}
-                      className="w-full bg-white/60 border border-orange-200 focus:border-orange-400 focus:ring-2 focus:ring-orange-200 rounded-lg pl-8 pr-2 py-2 text-sm outline-none transition-all placeholder-orange-300 text-orange-900"
-                    />
-                  </div>
-                </div>
-                <input
-                  type="date"
-                  value={deadline}
-                  onChange={(e) => setDeadline(e.target.value)}
-                  className="bg-white/60 border border-orange-200 focus:border-orange-400 focus:ring-2 focus:ring-orange-200 rounded-lg px-3 py-2 text-sm outline-none transition-all text-orange-900 cursor-pointer"
-                />
-                <button
-                  type="submit"
-                  className="mt-2 bg-orange-500 hover:bg-orange-600 text-white py-2 rounded-lg font-bold text-sm shadow-md transition-colors"
-                >
-                  Add
-                </button>
-              </form>
-            </div>
-
-            {/* Task Pool */}
-            <div className="glass-card rounded-3xl p-4 border border-orange-100 shadow-sm flex flex-col max-h-[50vh]">
-              <h2 className="text-base font-bold text-orange-950 mb-3 flex items-center gap-2">
-                <div className="p-1.5 bg-orange-100 rounded-lg text-orange-600"><CalendarDays className="w-4 h-4"/></div>
-                Pool
-              </h2>
-              
-              <button 
-                onClick={handleSyncSyllabus}
-                disabled={isSyncing}
-                className="mb-3 w-full bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 py-2 rounded-lg font-bold text-xs shadow-sm transition-all flex items-center justify-center gap-2 disabled:opacity-70"
-              >
-                {isSyncing ? (
-                  <>
-                    <div className="w-3 h-3 border-2 border-indigo-400/30 border-t-indigo-600 rounded-full animate-spin" />
-                    Syncing...
-                  </>
-                ) : (
-                  <>
-                    <DownloadCloud className="w-3 h-3" />
-                    Sync
-                  </>
-                )}
-              </button>
-
-              <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-2">
-                <AnimatePresence>
-                  {unplannedTasks.map((task) => (
-                    <motion.div
-                      layout
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.9 }}
-                      key={task.id}
-                      draggable
-                      onDragStart={(e: any) => handleDragStart(e, task.id)}
-                      onDragEnd={handleDragEnd}
-                      className={`group relative flex items-center gap-2 p-3 rounded-xl border bg-white/80 cursor-grab active:cursor-grabbing shadow-sm hover:shadow-md transition-all ${
-                        task.isVerified ? "border-indigo-200" : "border-orange-200"
-                      }`}
-                    >
-                      <GripVertical className="w-4 h-4 opacity-40 group-hover:opacity-100 transition-opacity text-orange-500 shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between gap-1">
-                          <h3 className="font-bold text-xs text-slate-800 truncate">{task.title}</h3>
-                          {task.isVerified && (
-                            <span className="flex items-center gap-0.5 text-[8px] font-bold uppercase tracking-wider text-indigo-600 bg-indigo-100 px-1 py-0.5 rounded shrink-0">
-                              API
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-[10px] font-semibold text-slate-500 mt-0.5">{task.duration}h</p>
-                      </div>
-                    </motion.div>
-                  ))}
-                  {unplannedTasks.length === 0 && (
-                    <div className="text-center py-6 text-orange-300">
-                      <p className="text-xs font-medium">Empty</p>
-                    </div>
-                  )}
-                </AnimatePresence>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Timeline Tab */}
-        {mobileTab === "timeline" && (
-          <div className="glass-card rounded-3xl p-4 border border-orange-100 shadow-sm pb-20">
-            <h2 className="text-base font-bold text-orange-950 mb-4 flex items-center gap-2">
+        {/* Timeline - 占据主要区域 */}
+        <div className="flex-1 overflow-y-auto pr-2 pb-20">
+          <div className="glass-card rounded-3xl p-4 border border-orange-100 shadow-sm">
+            <h2 className="text-base font-bold text-orange-950 mb-4 flex items-center gap-2 sticky top-0 bg-white/80 backdrop-blur -mx-4 px-4 py-2">
               <div className="p-1.5 bg-rose-100 rounded-lg text-rose-600"><Clock className="w-4 h-4"/></div>
               Timeline
             </h2>
@@ -889,7 +739,7 @@ export default function InteractivePlanning() {
                             {item.title}
                           </h4>
                           <p className={`text-[10px] font-semibold mt-0.5 ${item.isCompleted ? "text-emerald-600" : "text-rose-100"}`}>
-                            {item.duration}h • AI
+                            {item.duration}h
                           </p>
                         </div>
                       </div>
@@ -900,6 +750,173 @@ export default function InteractivePlanning() {
               </AnimatePresence>
             </div>
           </div>
+        </div>
+
+        {/* Bottom Sheet - Task Pool 抽屉 */}
+        <AnimatePresence>
+          {poolOpen && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setPoolOpen(false)}
+              className="absolute inset-0 bg-black/30 backdrop-blur-sm z-40"
+            />
+          )}
+        </AnimatePresence>
+
+        <motion.div
+          initial={{ y: "100%" }}
+          animate={{ y: poolOpen ? 0 : "100%" }}
+          exit={{ y: "100%" }}
+          transition={{ type: "spring", damping: 25, stiffness: 120 }}
+          className="fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-3xl border-t border-orange-200/50 shadow-2xl max-h-[80vh] flex flex-col"
+        >
+          {/* Handle Bar */}
+          <div className="flex justify-center pt-3 pb-2">
+            <div className="w-10 h-1 bg-orange-300 rounded-full"></div>
+          </div>
+
+          {/* Header */}
+          <div className="px-4 py-2 border-b border-orange-100 flex items-center justify-between">
+            <h2 className="text-base font-bold text-orange-950 flex items-center gap-2">
+              <CalendarDays className="w-4 h-4 text-orange-600"/>
+              Task Pool ({unplannedTasks.length})
+            </h2>
+            <button
+              onClick={() => setPoolOpen(false)}
+              className="p-1 hover:bg-orange-100 rounded-lg transition-colors"
+            >
+              <ChevronUp className="w-5 h-5 text-orange-600" />
+            </button>
+          </div>
+
+          {/* Content */}
+          <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2">
+            {/* Add Task Form */}
+            <div className="glass-card rounded-2xl p-3 border border-orange-100 mb-3">
+              <h3 className="text-sm font-bold text-orange-950 mb-2 flex items-center gap-2">
+                <Plus className="w-3.5 h-3.5 text-orange-600"/>
+                Add Task
+              </h3>
+              <form onSubmit={handleAddTask} className="flex flex-col gap-2">
+                <input
+                  type="text"
+                  placeholder="Task Name"
+                  required
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  className="bg-white/60 border border-orange-200 focus:border-orange-400 focus:ring-2 focus:ring-orange-200 rounded-lg px-3 py-2 text-xs outline-none transition-all placeholder-orange-300 text-orange-900"
+                />
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <Clock className="w-3 h-3 text-orange-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="number"
+                      step="0.5"
+                      min="0.5"
+                      required
+                      placeholder="Hrs"
+                      value={duration}
+                      onChange={(e) => setDuration(e.target.value)}
+                      className="w-full bg-white/60 border border-orange-200 focus:border-orange-400 focus:ring-2 focus:ring-orange-200 rounded-lg pl-7 pr-2 py-1.5 text-xs outline-none transition-all placeholder-orange-300 text-orange-900"
+                    />
+                  </div>
+                  <div className="relative flex-1">
+                    <MapPin className="w-3 h-3 text-orange-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      placeholder="Loc"
+                      value={location}
+                      onChange={(e) => setLocation(e.target.value)}
+                      className="w-full bg-white/60 border border-orange-200 focus:border-orange-400 focus:ring-2 focus:ring-orange-200 rounded-lg pl-7 pr-2 py-1.5 text-xs outline-none transition-all placeholder-orange-300 text-orange-900"
+                    />
+                  </div>
+                </div>
+                <input
+                  type="date"
+                  value={deadline}
+                  onChange={(e) => setDeadline(e.target.value)}
+                  className="bg-white/60 border border-orange-200 focus:border-orange-400 focus:ring-2 focus:ring-orange-200 rounded-lg px-3 py-1.5 text-xs outline-none transition-all text-orange-900 cursor-pointer"
+                />
+                <button
+                  type="submit"
+                  className="mt-1 bg-orange-500 hover:bg-orange-600 text-white py-1.5 rounded-lg font-bold text-xs shadow-md transition-colors"
+                >
+                  Add
+                </button>
+              </form>
+            </div>
+
+            {/* Sync Button */}
+            <button 
+              onClick={handleSyncSyllabus}
+              disabled={isSyncing}
+              className="w-full bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 py-1.5 rounded-lg font-bold text-xs shadow-sm transition-all flex items-center justify-center gap-2 disabled:opacity-70 mb-2"
+            >
+              {isSyncing ? (
+                <>
+                  <div className="w-3 h-3 border-2 border-indigo-400/30 border-t-indigo-600 rounded-full animate-spin" />
+                  Syncing...
+                </>
+              ) : (
+                <>
+                  <DownloadCloud className="w-3 h-3" />
+                  Sync Syllabus
+                </>
+              )}
+            </button>
+
+            {/* Tasks List */}
+            <AnimatePresence>
+              {unplannedTasks.map((task) => (
+                <motion.div
+                  layout
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  key={task.id}
+                  draggable
+                  onDragStart={(e: any) => handleDragStart(e, task.id)}
+                  onDragEnd={handleDragEnd}
+                  className={`group relative flex items-center gap-2 p-2.5 rounded-lg border bg-white/80 cursor-grab active:cursor-grabbing shadow-sm hover:shadow-md transition-all ${
+                    task.isVerified ? "border-indigo-200" : "border-orange-200"
+                  }`}
+                >
+                  <GripVertical className="w-3.5 h-3.5 opacity-40 group-hover:opacity-100 transition-opacity text-orange-500 shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-1">
+                      <h3 className="font-bold text-xs text-slate-800 truncate">{task.title}</h3>
+                      {task.isVerified && (
+                        <span className="flex items-center gap-0.5 text-[7px] font-bold uppercase tracking-wider text-indigo-600 bg-indigo-100 px-1 py-0.5 rounded shrink-0">
+                          API
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[9px] font-semibold text-slate-500 mt-0.5">{task.duration}h{task.location ? ` • ${task.location}` : ""}</p>
+                  </div>
+                </motion.div>
+              ))}
+              {unplannedTasks.length === 0 && (
+                <div className="text-center py-8 text-orange-300">
+                  <p className="text-xs font-medium">Pool is empty!</p>
+                </div>
+              )}
+            </AnimatePresence>
+          </div>
+        </motion.div>
+
+        {/* Floating Button 打开 Task Pool */}
+        {!poolOpen && (
+          <motion.button
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            onClick={() => setPoolOpen(true)}
+            className="fixed bottom-6 right-6 z-40 bg-gradient-to-r from-orange-500 to-rose-500 hover:from-orange-600 hover:to-rose-600 text-white p-4 rounded-full shadow-lg flex items-center gap-2 font-bold text-sm"
+          >
+            <CalendarDays className="w-5 h-5" />
+            <span>{unplannedTasks.length}</span>
+          </motion.button>
         )}
 
       </div>
